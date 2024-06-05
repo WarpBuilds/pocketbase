@@ -6,7 +6,7 @@ on:
 
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    runs-on: warp-ubuntu-latest-x64-8x
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -14,12 +14,12 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: WarpBuilds/setup-node@v4
         with:
           node-version: 20.11.0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: WarpBuilds/setup-go@v5
         with:
           go-version: '>=1.22.3'
 

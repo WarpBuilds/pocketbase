@@ -1,18 +1,19 @@
 name: basebuild
 
 on:
-#   pull_request:
-#   push:
-  workflow_dispatch:
-    inputs:
-      runs_on:
-        description: "Runs on value"
-        required: true
-        default: "warp-ubuntu-latest-x64-8x"
+  pull_request:
+  push:
+  # workflow_dispatch:
+  #   inputs:
+  #     runs_on:
+  #       description: "Runs on value"
+  #       required: true
+  #       default: "warp-ubuntu-latest-x64-8x"
 
 jobs:
   goreleaser:
-    runs-on: ${{ inputs.runs_on }}
+    # runs-on: ${{ inputs.runs_on }}
+    runs-on: self-hosted
     steps:
       - name: Checkout
         uses: actions/checkout@v4

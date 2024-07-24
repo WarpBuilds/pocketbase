@@ -237,6 +237,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnRecordBeforeAuthWithPasswordRequest": 1,
 				"OnRecordAfterAuthWithPasswordRequest":  1,
 				"OnRecordAuthRequest":                   1,
+				// lastLoginAlertSentAt update
+				"OnModelAfterUpdate":  1,
+				"OnModelBeforeUpdate": 1,
 			},
 		},
 
@@ -304,6 +307,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnRecordBeforeAuthWithPasswordRequest": 1,
 				"OnRecordAfterAuthWithPasswordRequest":  1,
 				"OnRecordAuthRequest":                   1,
+				// lastLoginAlertSentAt update
+				"OnModelAfterUpdate":  1,
+				"OnModelBeforeUpdate": 1,
 			},
 		},
 		{
@@ -328,6 +334,9 @@ func TestRecordAuthWithPassword(t *testing.T) {
 				"OnRecordBeforeAuthWithPasswordRequest": 1,
 				"OnRecordAfterAuthWithPasswordRequest":  1,
 				"OnRecordAuthRequest":                   1,
+				// lastLoginAlertSentAt update
+				"OnModelAfterUpdate":  1,
+				"OnModelBeforeUpdate": 1,
 			},
 		},
 
@@ -1699,6 +1708,28 @@ func TestRecordAuthOAuth2Redirect(t *testing.T) {
 				checkSuccessRedirect(t, app, res)
 
 				if clientStubs[6]["c3"].HasSubscription("@oauth2") {
+					t.Fatalf("Expected oauth2 subscription to be removed")
+				}
+			},
+		},
+		{
+			Name:   "(POST) client with @oauth2 subscription",
+			Method: http.MethodPost,
+			Url:    "/api/oauth2-redirect",
+			Body:   strings.NewReader("code=123&state=" + clientStubs[7]["c3"].Id()),
+			RequestHeaders: map[string]string{
+				"content-type": "application/x-www-form-urlencoded",
+			},
+			BeforeTestFunc: beforeTestFunc(clientStubs[7], map[string][]string{
+				"c3": {`"state":"` + clientStubs[7]["c3"].Id(), `"code":"123"`},
+			}),
+			ExpectedStatus: http.StatusSeeOther,
+			AfterTestFunc: func(t *testing.T, app *tests.TestApp, res *http.Response) {
+				app.Store().Get("cancelFunc").(context.CancelFunc)()
+
+				checkSuccessRedirect(t, app, res)
+
+				if clientStubs[7]["c3"].HasSubscription("@oauth2") {
 					t.Fatalf("Expected oauth2 subscription to be removed")
 				}
 			},

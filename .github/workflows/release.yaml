@@ -33,11 +33,6 @@ jobs:
         with:
           node-version: 20.11.0
 
-      - name: Set up Go
-        uses: WarpBuilds/setup-go@v5
-        with:
-          go-version: '>=1.22.5'
-
       - name: Ensure GCC is installed
         run: |
           if ! command -v gcc &> /dev/null
@@ -48,6 +43,11 @@ jobs:
           else
             echo "GCC is already installed"
           fi
+
+      - name: Set up Go
+        uses: WarpBuilds/setup-go@v5
+        with:
+          go-version: '>=1.22.5'
 
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.

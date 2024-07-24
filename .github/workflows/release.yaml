@@ -38,6 +38,17 @@ jobs:
         with:
           go-version: '>=1.22.5'
 
+      - name: Ensure GCC is installed
+        run: |
+          if ! command -v gcc &> /dev/null
+          then
+            echo "GCC could not be found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y gcc
+          else
+            echo "GCC is already installed"
+          fi
+
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
       # If the artificats differs, a "dirty error" is thrown - https://goreleaser.com/errors/dirty/

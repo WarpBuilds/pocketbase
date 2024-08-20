@@ -78,3 +78,11 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create snapshot
+        if: github.event_name == 'push'
+        uses: WarpBuilds/snapshot-save@feat/snp-rnr-action
+        with:
+          warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
+          wait-timeout-minutes: 30
+          alias: "wb-pocketbase-snp-0"

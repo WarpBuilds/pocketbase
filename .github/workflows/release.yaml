@@ -85,4 +85,4 @@ jobs:
         with:
           warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
           wait-timeout-minutes: 30
-          alias: "wb-pocketbase-snp-0"
+          alias: "wb-pocketbase-snp-1"

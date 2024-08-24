@@ -13,7 +13,7 @@ on:
 jobs:
   goreleaser:
     # runs-on: ${{ inputs.runs_on }}
-    runs-on: warpdev-ubuntu-2404-x64-2x
+    runs-on: warpdev-custom-validteststack-staticip-ondemand
     steps:
       - name: Checkout
         uses: actions/checkout@v4

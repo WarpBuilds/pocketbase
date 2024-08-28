@@ -3,23 +3,57 @@ name: basebuild
 on:
   pull_request:
   push:
+  # workflow_dispatch:
+  #   inputs:
+  #     runs_on:
+  #       description: "Runs on value"
+  #       required: true
+  #       default: "warp-ubuntu-latest-x64-8x"
 
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runners }}
+    strategy:
+      fail-fast: true
+      matrix:
+        runners:
+          - "warpdev-ubuntu-2404-x64-2x"
+          - "warpdev-ubuntu-2404-x64-4x"
+          - "warpdev-ubuntu-2404-x64-8x"
+          - "warpdev-ubuntu-2404-x64-16x"
+          - "warpdev-ubuntu-2404-x64-32x"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Log GitHub context
+        uses: actions/github-script@v7
+        with:
+          script: |
+            console.log('GitHub context:', context);
+            core.debug('Full GitHub context object:');
+            core.debug(JSON.stringify(context, null, 2));
+
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: WarpBuilds/setup-node@v4
         with:
           node-version: 20.11.0
 
+      - name: Ensure GCC is installed
+        run: |
+          if ! command -v gcc &> /dev/null
+          then
+            echo "GCC could not be found, installing..."
+            sudo apt-get update
+            sudo apt-get install -y gcc
+          else
+            echo "GCC is already installed"
+          fi
+
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: WarpBuilds/setup-go@v5
         with:
           go-version: '>=1.22.5'
 
@@ -52,3 +86,12 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create snapshot
+        if: github.event_name == 'push'
+        uses: WarpBuilds/snapshot-save@feat/snp-rnr-action
+        with:
+          warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
+          wait-timeout-minutes: 30
+          fail-on-error: "false"
+          alias: "wb-pocketbase-snp-bm-0"

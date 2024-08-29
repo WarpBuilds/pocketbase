@@ -47,6 +47,7 @@ var printLog = func(log *logger.Log) {
 	}
 
 	str.WriteString("\n")
+	str.WriteString("addition\n")
 
 	if v, ok := log.Data["type"]; ok && cast.ToString(v) == "request" {
 		padding := 0

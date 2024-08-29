@@ -15,14 +15,14 @@ jobs:
     runs-on: ${{ matrix.runners }}
     strategy:
       fail-fast: true
-      max-parallel: 1
+      # max-parallel: 1
       matrix:
         runners:
-          - "warpdev-ubuntu-2404-x64-2x"
-          - "warpdev-ubuntu-2404-x64-4x"
-          - "warpdev-ubuntu-2404-x64-8x"
-          - "warpdev-ubuntu-2404-x64-16x"
-          - "warpdev-ubuntu-2404-x64-32x"
+          - "warpdev-ubuntu-2404-x64-2x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
+          - "warpdev-ubuntu-2404-x64-4x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
+          - "warpdev-ubuntu-2404-x64-8x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
+          - "warpdev-ubuntu-2404-x64-16x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
+          - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -88,11 +88,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create snapshot
-        if: github.event_name == 'push'
-        uses: WarpBuilds/snapshot-save@feat/snp-rnr-action
-        with:
-          warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
-          wait-timeout-minutes: 30
-          fail-on-error: "false"
-          alias: "wb-pocketbase-snp-bm-0"
+      # - name: Create snapshot
+      #   if: github.event_name == 'push'
+      #   uses: WarpBuilds/snapshot-save@feat/snp-rnr-action
+      #   with:
+      #     warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
+      #     wait-timeout-minutes: 30
+      #     fail-on-error: "false"
+      #     alias: "wb-pocketbase-snp-bm-0"

@@ -3,31 +3,20 @@ name: basebuild
 on:
   pull_request:
   push:
-  # workflow_dispatch:
-  #   inputs:
-  #     runs_on:
-  #       description: "Runs on value"
-  #       required: true
-  #       default: "warp-ubuntu-latest-x64-8x"
 
 jobs:
   goreleaser:
     runs-on: ${{ matrix.runners }}
     strategy:
       fail-fast: true
-      # max-parallel: 1
       matrix:
         runners:
-          - "warpdev-ubuntu-2404-x64-2x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          - "warpdev-ubuntu-2404-x64-4x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          - "warpdev-ubuntu-2404-x64-8x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          - "warpdev-ubuntu-2404-x64-16x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          # - "warpdev-ubuntu-2404-x64-2x"
-          # - "warpdev-ubuntu-2404-x64-4x"
-          # - "warpdev-ubuntu-2404-x64-8x"
-          # - "warpdev-ubuntu-2404-x64-16x"
-          # - "warpdev-ubuntu-2404-x64-32x"          
+          - "warpdev-ubuntu-2404-x64-2x"
+          - "warpdev-ubuntu-2404-x64-4x"
+          - "warpdev-ubuntu-2404-x64-8x"
+          - "warpdev-ubuntu-2404-x64-16x"
+          - "warpdev-ubuntu-2404-x64-32x"
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,6 +36,14 @@ jobs:
         with:
           node-version: 20.11.0
 
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Ensure GCC is installed
         run: |
           if ! command -v gcc &> /dev/null
@@ -63,23 +60,18 @@ jobs:
         with:
           go-version: '>=1.22.5'
 
-      # This step usually is not needed because the /ui/dist is pregenerated locally
-      # but its here to ensure that each release embeds the latest admin ui artifacts.
-      # If the artificats differs, a "dirty error" is thrown - https://goreleaser.com/errors/dirty/
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
       - name: Build Admin dashboard UI
         run: npm --prefix=./ui ci && npm --prefix=./ui run build
-
-      # Temporary disable as the types can have random generated identifiers making it non-deterministic.
-      #
-      # # Similar to the above, the jsvm types are pregenerated locally
-      # # but its here to ensure that it wasn't forgotten to be executed.
-      # - name: Generate jsvm types
-      #   run: go run ./plugins/jsvm/internal/types/types.go
-
-      # The prebuilt golangci-lint doesn't support go 1.18+ yet
-      # https://github.com/golangci/golangci-lint/issues/2649
-      # - name: Run linter
-      #   uses: golangci/golangci-lint-action@v3
 
       - name: Run tests
         run: go test ./...
@@ -92,12 +84,3 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # - name: Create snapshot
-      #   if: github.event_name == 'push'
-      #   uses: WarpBuilds/snapshot-save@feat/snp-rnr-action
-      #   with:
-      #     warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
-      #     wait-timeout-minutes: 30
-      #     fail-on-error: "false"
-      #     alias: "wb-pocketbase-snp-bm-0"

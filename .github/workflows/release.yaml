@@ -24,6 +24,7 @@ jobs:
           # - "warpdev-ubuntu-2404-x64-16x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           - "warpdev-ubuntu-2404-x64-2x"
+          - "warpdev-ubuntu-2404-arm64-2x"
           # - "warpdev-ubuntu-2404-x64-4x"
           # - "warpdev-ubuntu-2404-x64-8x"
           # - "warpdev-ubuntu-2404-x64-16x"
@@ -100,4 +101,4 @@ jobs:
           warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
           wait-timeout-minutes: 30
           fail-on-error: "false"
-          alias: "wb-pocketbase-snp-bm-1"
+          alias: "wb-pocketbase-snp-${{ contains(matrix.runners, 'arm') ? 'arm' : 'x64' }}-0"

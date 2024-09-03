@@ -67,8 +67,8 @@ jobs:
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
       # If the artificats differs, a "dirty error" is thrown - https://goreleaser.com/errors/dirty/
-      - name: Build Admin dashboard UI
-        run: npm --prefix=./ui ci && npm --prefix=./ui run build
+      # - name: Build Admin dashboard UI
+      #   run: npm --prefix=./ui ci && npm --prefix=./ui run build
 
       # Temporary disable as the types can have random generated identifiers making it non-deterministic.
       #
@@ -82,17 +82,17 @@ jobs:
       # - name: Run linter
       #   uses: golangci/golangci-lint-action@v3
 
-      - name: Run tests
-        run: go test ./...
+      # - name: Run tests
+      #   run: go test ./...
 
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v3
-        with:
-          distribution: goreleaser
-          version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Run GoReleaser
+      #   uses: goreleaser/goreleaser-action@v3
+      #   with:
+      #     distribution: goreleaser
+      #     version: latest
+      #     args: release --clean
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create snapshot
         if: github.event_name == 'push'

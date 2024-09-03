@@ -24,7 +24,7 @@ jobs:
           # - "warpdev-ubuntu-2404-x64-16x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           - "warpdev-ubuntu-2404-x64-2x"
-          - "warpdev-ubuntu-2404-arm64-2x"
+          - "warpdev-ubuntu-latest-arm64-2x"
           # - "warpdev-ubuntu-2404-x64-4x"
           # - "warpdev-ubuntu-2404-x64-8x"
           # - "warpdev-ubuntu-2404-x64-16x"

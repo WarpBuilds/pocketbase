@@ -23,10 +23,10 @@ jobs:
           # - "warpdev-ubuntu-2404-x64-8x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-16x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          - "warpdev-ubuntu-2404-x64-2x"
-          - "warpdev-ubuntu-latest-arm64-2x"
-          - "warpdev-ubuntu-2404-x64-2x-spot"
-          - "warpdev-ubuntu-latest-arm64-2x-spot"
+          # - "warpdev-ubuntu-2404-x64-2x"
+          # - "warpdev-ubuntu-latest-arm64-2x"
+          # - "warpdev-ubuntu-2404-x64-2x-spot"
+          # - "warpdev-ubuntu-latest-arm64-2x-spot"
           - "warpdev-custom-validteststack-staticip-ondemand"
           # - "warpdev-ubuntu-2404-x64-4x"
           # - "warpdev-ubuntu-2404-x64-8x"
@@ -101,7 +101,8 @@ jobs:
         if: github.event_name == 'push'
         uses: WarpBuilds/snapshot-save@feat/snp-rnr-action
         with:
-          warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
+          # warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
+          warpbuild-base-url: "https://6c16-49-207-54-232.ngrok-free.app/api/v1"
           wait-timeout-minutes: 30
           fail-on-error: "false"
           alias: "wb-pocketbase-snp-${{ contains(matrix.runners, 'arm') && 'arm' || 'x64' }}-${{ contains(matrix.runners, 'custom') && 'custom' || contains(matrix.runners, 'spot') && 'spot' || 'ondemand' }}-0"

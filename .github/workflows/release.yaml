@@ -99,7 +99,7 @@ jobs:
 
       - name: Create snapshot
         if: github.event_name == 'push'
-        uses: WarpBuilds/snapshot-save@feat/snp-rnr-action
+        uses: WarpBuilds/snapshot-save@main
         with:
           warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
           # warpbuild-base-url: "https://6c16-49-207-54-232.ngrok-free.app/api/v1"

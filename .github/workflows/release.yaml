@@ -23,7 +23,7 @@ jobs:
           # - "warpdev-ubuntu-2404-x64-8x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-16x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          - "warp-ubuntu-2404-x64-2x;snapshot.key=pocketbase-snp-x64-ondemand-1"
+          - "warp-ubuntu-latest-x64-4x;snapshot.key=pocketbase-snp-praj"
           # - "warpdev-ubuntu-latest-arm64-2x"
           # - "warpdev-ubuntu-2404-x64-2x-spot"
           # - "warpdev-ubuntu-latest-arm64-2x-spot"
@@ -70,8 +70,8 @@ jobs:
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
       # If the artificats differs, a "dirty error" is thrown - https://goreleaser.com/errors/dirty/
-      # - name: Build Admin dashboard UI
-      #   run: npm --prefix=./ui ci && npm --prefix=./ui run build
+      - name: Build Admin dashboard UI
+        run: npm --prefix=./ui ci && npm --prefix=./ui run build
 
       # Temporary disable as the types can have random generated identifiers making it non-deterministic.
       #
@@ -85,17 +85,17 @@ jobs:
       # - name: Run linter
       #   uses: golangci/golangci-lint-action@v3
 
-      # - name: Run tests
-      #   run: go test ./...
+      - name: Run tests
+        run: go test ./...
 
-      # - name: Run GoReleaser
-      #   uses: goreleaser/goreleaser-action@v3
-      #   with:
-      #     distribution: goreleaser
-      #     version: latest
-      #     args: release --clean
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v3
+        with:
+          distribution: goreleaser
+          version: latest
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create snapshot
         if: github.event_name == 'push'
@@ -105,4 +105,4 @@ jobs:
           # warpbuild-base-url: "https://6c16-49-207-54-232.ngrok-free.app/api/v1"
           wait-timeout-minutes: 30
           fail-on-error: "false"
-          alias: "pocketbase-snp-${{ contains(matrix.runners, 'arm') && 'arm' || 'x64' }}-${{ contains(matrix.runners, 'custom') && 'custom' || contains(matrix.runners, 'spot') && 'spot' || 'ondemand' }}-1"
+          alias: "pocketbase-snp-praj"

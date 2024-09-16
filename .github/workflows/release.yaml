@@ -20,10 +20,10 @@ jobs:
         runners:
           # - "warpdev-ubuntu-2404-x64-2x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-4x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          # - "warpdev-ubuntu-2404-x64-8x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
+          - "warpdev-ubuntu-2404-x64-8x"
           # - "warpdev-ubuntu-2404-x64-16x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
-          - "warp-ubuntu-latest-x64-4x;snapshot.key=pocketbase-snp-praj"
+          # - "warp-ubuntu-latest-x64-4x;snapshot.key=pocketbase-snp-praj"
           # - "warpdev-ubuntu-latest-arm64-2x"
           # - "warpdev-ubuntu-2404-x64-2x-spot"
           # - "warpdev-ubuntu-latest-arm64-2x-spot"
@@ -106,4 +106,4 @@ jobs:
           # warpbuild-base-url: "https://6c16-49-207-54-232.ngrok-free.app/api/v1"
           wait-timeout-minutes: 30
           fail-on-error: "false"
-          alias: "pocketbase-snp-praj"
+          alias: "pocketbase-snp-x64-ondemand-1"

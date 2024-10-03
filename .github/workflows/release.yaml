@@ -98,6 +98,13 @@ jobs:
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update WARPBUILD_RUNNER_VERIFICATION_TOKEN
+        run: |
+          echo "WARPBUILD_RUNNER_VERIFICATION_TOKEN=unknown" >> $GITHUB_ENV
+      - name: Debug
+        run: |
+          echo "WARPBUILD_RUNNER_VERIFICATION_TOKEN=$WARPBUILD_RUNNER_VERIFICATION_TOKEN"
+
       - name: Create snapshot
         if: github.event_name == 'push' && env.WARPBUILD_SNAPSHOT_KEY == ''
         uses: WarpBuilds/snapshot-save@v1

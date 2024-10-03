@@ -99,7 +99,7 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create snapshot
-        if: github.event_name == 'push' && env.WARPBUILD_SNAPSHOT_KEY != ''
+        if: github.event_name == 'push' && env.WARPBUILD_SNAPSHOT_KEY == ''
         uses: WarpBuilds/snapshot-save@v1
         with:
           # warpbuild-base-url: "https://api.warpbuild.com/api/v1"

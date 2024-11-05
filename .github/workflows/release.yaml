@@ -110,7 +110,7 @@ jobs:
         uses: WarpBuilds/snapshot-save@v1
         with:
           # warpbuild-base-url: "https://api.warpbuild.com/api/v1"
-          # warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
+          warpbuild-base-url: "https://api.dev.warpbuild.dev/api/v1"
           # warpbuild-base-url: "https://6c16-49-207-54-232.ngrok-free.app/api/v1"
           wait-timeout-minutes: 30
           fail-on-error: "false"

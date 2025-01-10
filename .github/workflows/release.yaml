@@ -21,7 +21,7 @@ jobs:
           # - "warpdev-ubuntu-2404-x64-2x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-4x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warpdev-ubuntu-2404-x64-8x"
-          - "warp-ubuntu-2404-x64-4x;snapshot.key=pocketbase-snp-x64-bug-0"
+          # - "warp-ubuntu-2404-x64-4x;snapshot.key=pocketbase-snp-x64-bug-0"
           # - "warpdev-ubuntu-2404-x64-32x;wb.snapshot.key=wb-pocketbase-snp-bm-0"
           # - "warp-ubuntu-latest-x64-4x;snapshot.key=pocketbase-snp-praj"
           # - "warpdev-ubuntu-latest-arm64-2x"
@@ -29,7 +29,7 @@ jobs:
           # - "warpdev-ubuntu-latest-arm64-2x-spot"
           # - "warpdev-custom-validteststack-staticip-ondemand"
           # - "warpdev-ubuntu-2404-x64-4x"
-          # - "warpdev-ubuntu-2404-x64-8x"
+          - "warpdev-ubuntu-2404-x64-8x"
           # - "warpdev-ubuntu-2404-x64-16x"
           # - "warpdev-ubuntu-2404-x64-32x"          
     steps:

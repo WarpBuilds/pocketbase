@@ -79,8 +79,14 @@ jobs:
               # Local develop branch exists, switch to it
               git checkout develop
 
-              # Make sure we're up-to-date with our own remote first
-              git pull origin develop
+              # Reset to origin/develop if it exists, otherwise to upstream/develop
+              if git ls-remote --heads origin develop | grep -q develop; then
+                echo "Resetting develop branch to origin/develop"
+                git reset --hard origin/develop
+              else
+                echo "Resetting develop branch to upstream/develop"
+                git reset --hard upstream/develop
+              fi
             else
               # Create develop branch tracking upstream/develop
               git checkout -b develop upstream/develop
@@ -90,7 +96,11 @@ jobs:
             git merge upstream/develop --no-edit
 
             # Push changes to origin for develop branch
-            git push origin develop
+            git push origin develop || {
+              echo "Push failed. Attempting to resolve by force-pushing with --force-with-lease"
+              # This is safer than a plain force push as it will only push if the remote branch hasn't been updated
+              git push --force-with-lease origin develop
+            }
 
             # Switch back to original branch
             git checkout $CURRENT_BRANCH

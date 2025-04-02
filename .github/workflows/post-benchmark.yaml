@@ -15,11 +15,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Get Benchmark Workflow Run Details
+      - name: Get Benchmark Workflow Run Details & Write to File
         id: get_run
         uses: actions/github-script@v7
         with:
           script: |
+            const fs = require('fs');
+
             // This script uses the context of the triggering workflow run
             const run_id = context.payload.workflow_run.id;
             const workflow_name = context.payload.workflow_run.name;
@@ -30,6 +32,7 @@ jobs:
               repo: context.payload.repository.name,
               run_id: run_id
             });
+
             // Extract job details including start and completion times.
             const timings = jobs.jobs.map(job => {
               const start = new Date(job.started_at);
@@ -62,13 +65,24 @@ jobs:
                 "arch": arch
               };
             });
-            core.setOutput("timings", JSON.stringify(timings, null, 2));
-            console.log(JSON.stringify(timings, null, 2));
+
+            // Write the timings directly to a file
+            const timingsJson = JSON.stringify(timings, null, 2);
+            fs.writeFileSync('timings.json', timingsJson);
+
+            // Still set the output for potential other uses
+            core.setOutput("timings", timingsJson);
+
+            console.log(timingsJson);
             return timings;
-      - name: Write Timings to File
+
+      - name: Verify JSON File
         run: |
-          echo "${{ steps.get_run.outputs.timings }}" > timings.json
+          echo "Contents of timings.json:"
           cat timings.json
+          echo ""
+          echo "Validating JSON format..."
+          jq '.' timings.json > /dev/null && echo "✅ JSON is valid" || echo "❌ JSON is invalid"
 
       - name: Set AWS Credentials for R2
         run: |

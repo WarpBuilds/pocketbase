@@ -5,10 +5,12 @@ on:
   push:
 
 jobs:
-  goreleaser:
-    runs-on: ubuntu-latest
+  github-runner-build:
+    name: Build on GitHub Runner
+    runs-on: gha-ubuntu-latest-x64-4x
     env:
       flags: ""
+      runner_type: "github"
     steps:
       # re-enable auto-snapshot from goreleaser-action@v3
       # (https://github.com/goreleaser/goreleaser-action-v4-auto-snapshot-example)
@@ -28,7 +30,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '>=1.23.6'
+          go-version: ">=1.23.6"
 
       # This step usually is not needed because the /ui/dist is pregenerated locally
       # but its here to ensure that each release embeds the latest admin ui artifacts.
@@ -50,7 +52,59 @@ jobs:
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
-          version: '~> v2'
+          version: "~> v2"
+          args: release --clean ${{ env.flags }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  warp-runner-build:
+    name: Build on WarpBuild Runner
+    runs-on: warp-ubuntu-latest-x64-4x
+    env:
+      flags: ""
+      runner_type: "warpbuild"
+    steps:
+      # re-enable auto-snapshot from goreleaser-action@v3
+      # (https://github.com/goreleaser/goreleaser-action-v4-auto-snapshot-example)
+      - if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        run: echo "flags=--snapshot" >> $GITHUB_ENV
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: WarpBuilds/setup-node@v4
+        with:
+          node-version: 20.17.0
+
+      - name: Set up Go
+        uses: WarpBuilds/setup-go@v5
+        with:
+          go-version: ">=1.23.6"
+
+      # This step usually is not needed because the /ui/dist is pregenerated locally
+      # but its here to ensure that each release embeds the latest admin ui artifacts.
+      # If the artificats differs, a "dirty error" is thrown - https://goreleaser.com/errors/dirty/
+      - name: Build Admin dashboard UI
+        run: npm --prefix=./ui ci && npm --prefix=./ui run build
+
+      # Temporary disable as the types can have random generated identifiers making it non-deterministic.
+      #
+      # # Similar to the above, the jsvm types are pregenerated locally
+      # # but its here to ensure that it wasn't forgotten to be executed.
+      # - name: Generate jsvm types
+      #   run: go run ./plugins/jsvm/internal/types/types.go
+
+      - name: Run tests
+        run: go test ./...
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
           args: release --clean ${{ env.flags }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

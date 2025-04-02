@@ -62,7 +62,8 @@ jobs:
                 "status": job.status,
                 "conclusion": job.conclusion,
                 "provider": jobProvider,
-                "arch": arch
+                "arch": arch,
+                "os": ["linux"]
               };
             });
 

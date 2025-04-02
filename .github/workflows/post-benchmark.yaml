@@ -100,4 +100,4 @@ jobs:
           TIME=$(date --utc +'%H:%M:%SZ')
 
           # Upload the updated JSON file to R2 using date-based directory structure
-          aws s3 cp timings.json s3://warpbuild-benchmarks/runners/pocketbase/timings/${YEAR}/${MONTH}/${DAY}/${TIME}-${RUN_ID}.json --endpoint-url ${{ secrets.R2_ENDPOINT }} --debug --checksum-algorithm CRC32
+          aws s3 cp timings.json s3://warpbuild-benchmarks/runners/pocketbase/timings/${YEAR}/${MONTH}/${DAY}/${TIME}-${RUN_ID}.json --endpoint-url ${{ secrets.R2_ENDPOINT }} --checksum-algorithm CRC32

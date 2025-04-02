@@ -50,25 +50,49 @@ jobs:
             git remote set-url upstream $UPSTREAM_INFO
           fi
 
-          # Fetch from upstream
+          # Fetch from upstream including all branches
           git fetch upstream
 
           # Store current branch (typically main)
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current branch: $CURRENT_BRANCH"
 
-          # Get the current commit SHA before merging
-          BEFORE_SHA=$(git rev-parse HEAD)
+          # ----- Sync current branch -----
+          echo "Syncing current branch: $CURRENT_BRANCH"
 
-          # Merge upstream changes
+          # Merge upstream changes for current branch
           git merge upstream/$CURRENT_BRANCH --no-edit
 
-          # Get the upstream commit SHA that we merged
-          UPSTREAM_SHA=$(git rev-parse upstream/$CURRENT_BRANCH)
-
-          # Push changes to origin
+          # Push changes to origin for current branch
           git push origin $CURRENT_BRANCH
 
-          echo "Synced with upstream repository. Merged commit $UPSTREAM_SHA"
+          # ----- Sync develop branch -----
+          # Check if upstream has a develop branch
+          if git ls-remote --heads upstream develop | grep -q develop; then
+            echo "Syncing develop branch"
+
+            # Check if local develop branch exists
+            if git show-ref --verify --quiet refs/heads/develop; then
+              # Local develop branch exists, switch to it
+              git checkout develop
+            else
+              # Create develop branch tracking upstream/develop
+              git checkout -b develop upstream/develop
+            fi
+
+            # Merge upstream changes for develop branch
+            git merge upstream/develop --no-edit
+
+            # Push changes to origin for develop branch
+            git push origin develop
+
+            # Switch back to original branch
+            git checkout $CURRENT_BRANCH
+          else
+            echo "Upstream does not have a develop branch. Skipping develop branch sync."
+          fi
+
+          echo "Sync complete for all branches"
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}

@@ -71,10 +71,16 @@ jobs:
           if git ls-remote --heads upstream develop | grep -q develop; then
             echo "Syncing develop branch"
 
+            # First, fetch everything from origin as well to be up-to-date
+            git fetch origin
+
             # Check if local develop branch exists
             if git show-ref --verify --quiet refs/heads/develop; then
               # Local develop branch exists, switch to it
               git checkout develop
+
+              # Make sure we're up-to-date with our own remote first
+              git pull origin develop
             else
               # Create develop branch tracking upstream/develop
               git checkout -b develop upstream/develop

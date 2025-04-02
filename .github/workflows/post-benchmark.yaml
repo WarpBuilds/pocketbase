@@ -5,6 +5,9 @@ on:
     workflows: ["basebuild"]
     types:
       - completed
+    branches:
+      - main
+      - develop
 
 jobs:
   fetch-timings:

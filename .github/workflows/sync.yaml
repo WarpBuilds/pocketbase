@@ -50,8 +50,9 @@ jobs:
             git remote set-url upstream $UPSTREAM_INFO
           fi
 
-          # Fetch from upstream including all branches
+          # Fetch from upstream and origin
           git fetch upstream
+          git fetch origin
 
           # Store current branch (typically main)
           CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
@@ -63,6 +64,9 @@ jobs:
           # Merge upstream changes for current branch
           git merge upstream/$CURRENT_BRANCH --no-edit
 
+          # Preserve our workflow files
+          git checkout HEAD -- .github/workflows/
+
           # Push changes to origin for current branch
           git push origin $CURRENT_BRANCH
 
@@ -71,36 +75,29 @@ jobs:
           if git ls-remote --heads upstream develop | grep -q develop; then
             echo "Syncing develop branch"
 
-            # First, fetch everything from origin as well to be up-to-date
-            git fetch origin
-
             # Check if local develop branch exists
             if git show-ref --verify --quiet refs/heads/develop; then
               # Local develop branch exists, switch to it
               git checkout develop
-
-              # Reset to origin/develop if it exists, otherwise to upstream/develop
-              if git ls-remote --heads origin develop | grep -q develop; then
-                echo "Resetting develop branch to origin/develop"
-                git reset --hard origin/develop
-              else
-                echo "Resetting develop branch to upstream/develop"
-                git reset --hard upstream/develop
-              fi
             else
-              # Create develop branch tracking upstream/develop
-              git checkout -b develop upstream/develop
+              # Create develop branch tracking origin/develop if it exists, otherwise track upstream/develop
+              if git ls-remote --heads origin develop | grep -q develop; then
+                git checkout -b develop origin/develop
+              else
+                git checkout -b develop upstream/develop
+              fi
             fi
 
-            # Merge upstream changes for develop branch
+            # Merge upstream changes without disrupting local modifications
+            echo "Merging upstream changes into develop branch"
             git merge upstream/develop --no-edit
 
-            # Push changes to origin for develop branch
-            git push origin develop || {
-              echo "Push failed. Attempting to resolve by force-pushing with --force-with-lease"
-              # This is safer than a plain force push as it will only push if the remote branch hasn't been updated
-              git push --force-with-lease origin develop
-            }
+            # Preserve our workflow files
+            git checkout HEAD -- .github/workflows/
+
+            # Push changes to origin for develop branch (without force)
+            echo "Pushing changes to origin/develop"
+            git push origin develop
 
             # Switch back to original branch
             git checkout $CURRENT_BRANCH

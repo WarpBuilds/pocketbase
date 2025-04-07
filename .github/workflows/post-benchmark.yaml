@@ -1,0 +1,107 @@
+name: Post Benchmark Data
+
+on:
+  workflow_run:
+    workflows: ["basebuild"]
+    types:
+      - completed
+    branches:
+      - master
+      - develop
+
+jobs:
+  fetch-timings:
+    name: Fetch Benchmark Timings & Upload to R2
+    runs-on: warp-ubuntu-latest-x64-8x
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get Benchmark Workflow Run Details & Write to File
+        id: get_run
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // This script uses the context of the triggering workflow run
+            const run_id = context.payload.workflow_run.id;
+            const workflow_name = context.payload.workflow_run.name;
+            const display_title = context.payload.workflow_run.display_title || '';
+
+            const { data: jobs } = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.payload.repository.owner.login,
+              repo: context.payload.repository.name,
+              run_id: run_id
+            });
+
+            // Extract job details including start and completion times.
+            const timings = jobs.jobs.map(job => {
+              const start = new Date(job.started_at);
+              const end = new Date(job.completed_at);
+              const duration = Math.round((end - start) / 1000); // duration in seconds
+
+              // Determine runner type from job name
+              let jobProvider = 'github';
+              if (job.name.includes('Build on WarpBuild Runner')) {
+                jobProvider = 'warpbuild';
+              }
+
+              // Determine architecture - can be extended if needed
+              const arch = ["amd64"];
+
+              return {
+                "id": job.id,
+                "job": job.name,
+                "workflow_name": workflow_name,
+                "display_title": display_title,
+                "duration": duration,
+                "created_at": job.created_at,
+                "started_at": job.started_at,
+                "completed_at": job.completed_at,
+                "run_url": job.run_url,
+                "html_url": job.html_url,
+                "status": job.status,
+                "conclusion": job.conclusion,
+                "provider": jobProvider,
+                "arch": arch,
+                "os": ["linux"]
+              };
+            });
+
+            // Write the timings directly to a file
+            const timingsJson = JSON.stringify(timings, null, 2);
+            fs.writeFileSync('timings.json', timingsJson);
+
+            // Still set the output for potential other uses
+            core.setOutput("timings", timingsJson);
+
+            console.log(timingsJson);
+            return timings;
+
+      - name: Verify JSON File
+        run: |
+          echo "Contents of timings.json:"
+          cat timings.json
+          echo ""
+          echo "Validating JSON format..."
+          jq '.' timings.json > /dev/null && echo "✅ JSON is valid" || echo "❌ JSON is invalid"
+
+      - name: Set AWS Credentials for R2
+        run: |
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.R2_ACCESS_KEY }}" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.R2_SECRET_KEY }}" >> $GITHUB_ENV
+          echo "AWS_DEFAULT_REGION=us-east-1" >> $GITHUB_ENV
+
+      - name: Upload merged timings to R2
+        run: |
+          # Capture the current run ID and separate date components
+          RUN_ID=${{ github.run_id }}
+          YEAR=$(date --utc +'%Y')
+          MONTH=$(date --utc +'%m')
+          DAY=$(date --utc +'%d')
+          TIME=$(date --utc +'%H:%M:%SZ')
+
+          # Upload the updated JSON file to R2 using date-based directory structure
+          aws s3 cp timings.json s3://warpbuild-benchmarks/runners/pocketbase/timings/${YEAR}/${MONTH}/${DAY}/${TIME}-${RUN_ID}.json --endpoint-url ${{ secrets.R2_ENDPOINT }} --checksum-algorithm CRC32

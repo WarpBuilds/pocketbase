@@ -1,0 +1,133 @@
+name: Sync
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "*/10 * * * *" # Runs every 10 minutes
+
+jobs:
+  sync:
+    name: Sync With Upstream
+    runs-on: warp-ubuntu-latest-x64-4x
+    steps:
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Checkout with GitHub App Token
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Get GitHub App User ID
+        id: get-user-id
+        run: echo "user-id=$(gh api "/users/${{ steps.app-token.outputs.app-slug }}[bot]" --jq .id)" >> "$GITHUB_OUTPUT"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      - run: |
+          git config --global user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config --global user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
+
+      - name: Sync with upstream repository
+        run: |
+          # Get the upstream repository URL from GitHub API
+          REPO_NAME="${GITHUB_REPOSITORY}"
+          UPSTREAM_INFO=$(gh api repos/$REPO_NAME | jq -r '.parent.clone_url // empty')
+
+          if [ -z "$UPSTREAM_INFO" ]; then
+            echo "This doesn't appear to be a fork or the API couldn't retrieve the parent repository"
+            exit 1
+          fi
+
+          echo "Upstream repository: $UPSTREAM_INFO"
+
+          # Check if upstream remote exists, add it if it doesn't
+          if ! git remote | grep -q "^upstream$"; then
+            git remote add upstream $UPSTREAM_INFO
+          else
+            git remote set-url upstream $UPSTREAM_INFO
+          fi
+
+          # Fetch from upstream and origin
+          git fetch upstream
+          git fetch origin
+
+          # Store current branch (typically main)
+          CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+          echo "Current branch: $CURRENT_BRANCH"
+
+          # Function to sync a branch with conflict resolution
+          sync_branch() {
+            local branch_name=$1
+            echo "Syncing branch: $branch_name"
+
+            # Save any workflow files we might have modified
+            mkdir -p /tmp/workflow-backup
+            if [ -d ".github/workflows" ]; then
+              cp -r .github/workflows/* /tmp/workflow-backup/ || true
+            fi
+
+            # Try standard merge first
+            if git merge upstream/$branch_name --no-edit; then
+              echo "Standard merge successful"
+            else
+              # If standard merge fails, abort it
+              git merge --abort
+
+              # Try again with strategy to prefer upstream changes
+              echo "Standard merge failed. Using 'theirs' strategy to resolve conflicts automatically."
+              git merge -X theirs upstream/$branch_name --no-edit
+            fi
+
+            # Restore our workflow files regardless of merge strategy
+            if [ -d "/tmp/workflow-backup" ] && [ -n "$(ls -A /tmp/workflow-backup)" ]; then
+              mkdir -p .github/workflows
+              cp -r /tmp/workflow-backup/* .github/workflows/
+              git add .github/workflows/
+              if git diff --staged --quiet; then
+                echo "No changes to workflow files"
+              else
+                git commit -m "Preserve custom workflow files after sync"
+              fi
+            fi
+
+            # Push changes to origin
+            git push origin $branch_name
+          }
+
+          # ----- Sync current branch -----
+          sync_branch "$CURRENT_BRANCH"
+
+          # ----- Sync develop branch -----
+          # Check if upstream has a develop branch
+          if git ls-remote --heads upstream develop | grep -q develop; then
+            echo "Found develop branch in upstream"
+
+            # Check if local develop branch exists
+            if git show-ref --verify --quiet refs/heads/develop; then
+              # Local develop branch exists, switch to it
+              git checkout develop
+            else
+              # Create develop branch tracking origin/develop if it exists, otherwise track upstream/develop
+              if git ls-remote --heads origin develop | grep -q develop; then
+                git checkout -b develop origin/develop
+              else
+                git checkout -b develop upstream/develop
+              fi
+            fi
+
+            # Sync the develop branch
+            sync_branch "develop"
+
+            # Switch back to original branch
+            git checkout $CURRENT_BRANCH
+          else
+            echo "Upstream does not have a develop branch. Skipping develop branch sync."
+          fi
+
+          echo "Sync complete for all branches"
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}

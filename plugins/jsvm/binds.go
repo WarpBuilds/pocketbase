@@ -778,7 +778,7 @@ func httpClientBinds(vm *goja.Runtime) {
 		Headers map[string][]string     `json:"headers"`
 		Cookies map[string]*http.Cookie `json:"cookies"`
 
-		// Deprecated: consider using toString(result.Body) instead
+		// Deprecated: consider using Body instead
 		Raw string `json:"raw"`
 
 		Body       []byte `json:"body"`

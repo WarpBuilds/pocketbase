@@ -164,7 +164,7 @@ func TestTokenFunctionsGeoDistance(t *testing.T) {
 	}
 }
 
-func TestTokenFunctionsGeoDistanceEval(t *testing.T) {
+func TestTokenFunctionsGeoDistanceExec(t *testing.T) {
 	t.Parallel()
 
 	testDB, err := createTestDB()

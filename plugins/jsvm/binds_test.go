@@ -578,9 +578,9 @@ func TestBaseBindsDateTime(t *testing.T) {
 		const scenarios = [
 			// empty datetime string and no custom location
 			{date: new DateTime(''), expected: nowPart},
-			// empty datetime string and custom location (should be ignored)
+			// empty datetime string and custom default location (should be ignored)
 			{date: new DateTime('', 'Asia/Tokyo'), expected: nowPart},
-			// full datetime string and no custom location
+			// full datetime string and no custom default location
 			{date: new DateTime('2023-01-01 00:00:00.000Z'), expected: "2023-01-01 00:00:00.000Z"},
 			// invalid location (fallback to UTC)
 			{date: new DateTime('2025-10-26 03:00:00', 'invalid'), expected: "2025-10-26 03:00:00.000Z"},
@@ -588,6 +588,8 @@ func TestBaseBindsDateTime(t *testing.T) {
 			{date: new DateTime('2025-10-26 03:00:00', 'Europe/Amsterdam'), expected: "2025-10-26 02:00:00.000Z"},
 			// CEST
 			{date: new DateTime('2025-10-26 01:00:00', 'Europe/Amsterdam'), expected: "2025-10-25 23:00:00.000Z"},
+			// with timezone/offset in the date string (aka. should ignore the custom default location)
+			{date: new DateTime('2025-10-26 01:00:00 +0200', 'Asia/Tokyo'), expected: "2025-10-25 23:00:00.000Z"},
 		];
 
 		for (let i = 0; i < scenarios.length; i++) {

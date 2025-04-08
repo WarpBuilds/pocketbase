@@ -618,17 +618,17 @@ interface DateTime extends types.DateTime{} // merge
  * // full datetime string
  * const dt1 = new DateTime('2023-07-01 00:00:00.000Z')
  *
- * // datetime string with optional parse in timezone location
+ * // datetime string with default "parse in" timezone location
  * //
  * // similar to new DateTime('2023-07-01 00:00:00 +01:00') or new DateTime('2023-07-01 00:00:00 +02:00')
- * // depending on the daylight saving time (DST)
+ * // but accounts for the daylight saving time (DST)
  * const dt2 = new DateTime('2023-07-01 00:00:00', 'Europe/Amsterdam')
  * ` + "```" + `
  *
  * @group PocketBase
  */
 declare class DateTime implements types.DateTime {
-  constructor(date?: string, parseInLocation?: string)
+  constructor(date?: string, defaultParseInLocation?: string)
 }
 
 interface ValidationError extends ozzo_validation.Error{} // merge

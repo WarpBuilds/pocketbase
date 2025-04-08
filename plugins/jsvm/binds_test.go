@@ -568,15 +568,33 @@ func TestBaseBindsDateTime(t *testing.T) {
 	baseBinds(vm)
 
 	_, err := vm.RunString(`
-		const v0 = new DateTime();
-		if (v0.isZero()) {
-			throw new Error('Expected to fallback to now, got zero value');
+		const now = new DateTime();
+		if (now.isZero()) {
+			throw new Error('(now) Expected to fallback to now, got zero value');
 		}
 
-		const v1 = new DateTime('2023-01-01 00:00:00.000Z');
-		const expected = "2023-01-01 00:00:00.000Z"
-		if (v1.string() != expected) {
-			throw new Error('Expected ' + expected + ', got ', v1.string());
+		const nowPart = now.string().substring(0, 19)
+
+		const scenarios = [
+			// empty datetime string and no custom location
+			{date: new DateTime(''), expected: nowPart},
+			// empty datetime string and custom location (should be ignored)
+			{date: new DateTime('', 'Asia/Tokyo'), expected: nowPart},
+			// full datetime string and no custom location
+			{date: new DateTime('2023-01-01 00:00:00.000Z'), expected: "2023-01-01 00:00:00.000Z"},
+			// invalid location (fallback to UTC)
+			{date: new DateTime('2025-10-26 03:00:00', 'invalid'), expected: "2025-10-26 03:00:00.000Z"},
+			// CET
+			{date: new DateTime('2025-10-26 03:00:00', 'Europe/Amsterdam'), expected: "2025-10-26 02:00:00.000Z"},
+			// CEST
+			{date: new DateTime('2025-10-26 01:00:00', 'Europe/Amsterdam'), expected: "2025-10-25 23:00:00.000Z"},
+		];
+
+		for (let i = 0; i < scenarios.length; i++) {
+			const s = scenarios[i];
+			if (!s.date.string().includes(s.expected)) {
+				throw new Error('(' + i + ') ' + s.date.string() + ' does not contain expected ' + s.expected);
+			}
 		}
 	`)
 	if err != nil {

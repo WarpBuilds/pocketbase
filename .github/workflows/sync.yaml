@@ -69,16 +69,25 @@ jobs:
               cp -r .github/workflows/* /tmp/workflow-backup/ || true
             fi
 
-            # Try standard merge first
-            if git merge upstream/$branch_name --no-edit; then
-              echo "Standard merge successful"
-            else
-              # If standard merge fails, abort it
-              git merge --abort
+            # Get just the commit message from upstream
+            UPSTREAM_COMMIT_MSG=$(git log -1 --pretty=format:"%s" upstream/$branch_name)
 
-              # Try again with strategy to prefer upstream changes
-              echo "Standard merge failed. Using 'theirs' strategy to resolve conflicts automatically."
-              git merge -X theirs upstream/$branch_name --no-edit
+            # Check if we need to merge (are we behind upstream?)
+            if git merge-base --is-ancestor HEAD upstream/$branch_name; then
+              echo "Already up to date with upstream/$branch_name"
+            else
+              # We're behind upstream, proceed with merge
+              # Try standard merge first with the upstream commit message
+              if git merge upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG"; then
+                echo "Standard merge successful"
+              else
+                # If standard merge fails, abort it
+                git merge --abort
+
+                # Try again with strategy to prefer upstream changes
+                echo "Standard merge failed. Using 'theirs' strategy to resolve conflicts automatically."
+                git merge -X theirs upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG"
+              fi
             fi
 
             # Restore our workflow files regardless of merge strategy

@@ -252,7 +252,7 @@ func recordCreate(optFinalizer func(data any) error) func(e *core.RequestEvent) 
 		}
 
 		// check the request and record data against the create and manage rules
-		if !hasSuperuserAuth && collection.CreateRule != nil {
+		if !hasSuperuserAuth && (collection.CreateRule != nil || collection.ManageRule != nil) {
 			dummyRecord := record.Clone()
 
 			dummyRandomPart := "__pb_create__" + security.PseudorandomString(6)

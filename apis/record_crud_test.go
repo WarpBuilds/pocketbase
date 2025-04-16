@@ -2151,7 +2151,33 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "auth record with valid data by auth record with manage access",
+			Name:   "auth record with valid data but unsatisfied manage API rule",
+			Method: http.MethodPost,
+			URL:    "/api/collections/nologin/records",
+			Body: strings.NewReader(`{
+				"email":"new@example.com",
+				"password":"12345678",
+				"passwordConfirm":"12345678",
+				"name":"test_name",
+				"emailVisibility":true,
+				"verified":true
+			}`),
+			Headers: map[string]string{
+				// nologin, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImRjNDlrNmpnZWpuNDBoMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoia3B2NzA5c2sybHFicWs4IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.fdUPFLDx5b6RM_XFqnqsyiyNieyKA2HIIkRmUh9kIoY",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"verified":{"code":`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+			},
+		},
+		{
+			Name:   "auth record with valid data and satisfied manage API rule",
 			Method: http.MethodPost,
 			URL:    "/api/collections/nologin/records",
 			Body: strings.NewReader(`{

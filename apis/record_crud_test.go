@@ -1563,10 +1563,7 @@ func TestRecordCrudCreate(t *testing.T) {
 			Body:            strings.NewReader(`{"title":"test123"}`),
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule failure check)",
@@ -1579,10 +1576,7 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "auth record submit in restricted collection (rule pass check) + expand relations",
@@ -1731,10 +1725,7 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 			ExpectedStatus:  400,
 			ExpectedContent: []string{`"data":{}`},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "submit via multipart form data with @jsonPayload key and satisfied @request.body rule",
@@ -1974,14 +1965,9 @@ func TestRecordCrudCreate(t *testing.T) {
 				"total+":4,
 				"total-":2
 			}`),
-			ExpectedStatus: 400,
-			ExpectedContent: []string{
-				`"data":{}`,
-			},
-			ExpectedEvents: map[string]int{
-				"*":                     0,
-				"OnRecordCreateRequest": 1,
-			},
+			ExpectedStatus:  400,
+			ExpectedContent: []string{`"data":{}`},
+			ExpectedEvents:  map[string]int{"*": 0},
 		},
 		{
 			Name:   "@request.body.field with compute modifers (rule pass check)",
@@ -2165,7 +2151,33 @@ func TestRecordCrudCreate(t *testing.T) {
 			},
 		},
 		{
-			Name:   "auth record with valid data by auth record with manage access",
+			Name:   "auth record with valid data but unsatisfied manage API rule",
+			Method: http.MethodPost,
+			URL:    "/api/collections/nologin/records",
+			Body: strings.NewReader(`{
+				"email":"new@example.com",
+				"password":"12345678",
+				"passwordConfirm":"12345678",
+				"name":"test_name",
+				"emailVisibility":true,
+				"verified":true
+			}`),
+			Headers: map[string]string{
+				// nologin, test@example.com
+				"Authorization": "eyJhbGciOiJIUzI1NiJ9.eyJpZCI6ImRjNDlrNmpnZWpuNDBoMyIsInR5cGUiOiJhdXRoIiwiY29sbGVjdGlvbklkIjoia3B2NzA5c2sybHFicWs4IiwiZXhwIjoyNTI0NjA0NDYxLCJyZWZyZXNoYWJsZSI6dHJ1ZX0.fdUPFLDx5b6RM_XFqnqsyiyNieyKA2HIIkRmUh9kIoY",
+			},
+			ExpectedStatus: 400,
+			ExpectedContent: []string{
+				`"data":{`,
+				`"verified":{"code":`,
+			},
+			ExpectedEvents: map[string]int{
+				"*":                     0,
+				"OnRecordCreateRequest": 1,
+			},
+		},
+		{
+			Name:   "auth record with valid data and satisfied manage API rule",
 			Method: http.MethodPost,
 			URL:    "/api/collections/nologin/records",
 			Body: strings.NewReader(`{

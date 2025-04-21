@@ -1016,6 +1016,43 @@ func TestRecordGetStringSlice(t *testing.T) {
 	}
 }
 
+func TestRecordGetGeoPoint(t *testing.T) {
+	t.Parallel()
+
+	scenarios := []struct {
+		value    any
+		expected string
+	}{
+		{nil, `{"lon":0,"lat":0}`},
+		{"", `{"lon":0,"lat":0}`},
+		{0, `{"lon":0,"lat":0}`},
+		{false, `{"lon":0,"lat":0}`},
+		{"{}", `{"lon":0,"lat":0}`},
+		{"[]", `{"lon":0,"lat":0}`},
+		{[]int{1, 2}, `{"lon":0,"lat":0}`},
+		{map[string]any{"lon": 1, "lat": 2}, `{"lon":1,"lat":2}`},
+		{[]byte(`{"lon":1,"lat":2}`), `{"lon":1,"lat":2}`},
+		{`{"lon":1,"lat":2}`, `{"lon":1,"lat":2}`},
+		{types.GeoPoint{Lon: 1, Lat: 2}, `{"lon":1,"lat":2}`},
+		{&types.GeoPoint{Lon: 1, Lat: 2}, `{"lon":1,"lat":2}`},
+	}
+
+	collection := core.NewBaseCollection("test")
+	record := core.NewRecord(collection)
+
+	for i, s := range scenarios {
+		t.Run(fmt.Sprintf("%d_%#v", i, s.value), func(t *testing.T) {
+			record.Set("test", s.value)
+
+			pointStr := record.GetGeoPoint("test").String()
+
+			if pointStr != s.expected {
+				t.Fatalf("Expected %q, got %q", s.expected, pointStr)
+			}
+		})
+	}
+}
+
 func TestRecordGetUnsavedFiles(t *testing.T) {
 	t.Parallel()
 
@@ -1659,18 +1696,21 @@ func TestRecordModelEventSync(t *testing.T) {
 
 	changeRecordEventBefore := func(e *core.RecordEvent) {
 		e.Type = "test_b"
+		//nolint:staticcheck
 		e.Context = context.WithValue(context.Background(), "test", 123)
 		e.Record = testRecords[1]
 	}
 
 	modelEventFinalizerChange := func(e *core.ModelEvent) {
 		e.Type = "test_c"
+		//nolint:staticcheck
 		e.Context = context.WithValue(context.Background(), "test", 456)
 		e.Model = testRecords[2]
 	}
 
 	changeRecordEventAfter := func(e *core.RecordEvent) {
 		e.Type = "test_d"
+		//nolint:staticcheck
 		e.Context = context.WithValue(context.Background(), "test", 789)
 		e.Record = testRecords[3]
 	}

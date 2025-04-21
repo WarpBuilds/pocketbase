@@ -77,6 +77,22 @@ jobs:
               echo "Already up to date with upstream/$branch_name"
             else
               # We're behind upstream, proceed with merge
+
+              # Extract UI dist files from upstream before attempting merge
+              # Create a temporary branch to get upstream files
+              git checkout -b temp_upstream_branch upstream/$branch_name
+
+              # Save upstream ui/dist directory completely if it exists
+              if [ -d "ui/dist" ]; then
+                echo "Saving upstream ui/dist directory"
+                mkdir -p /tmp/ui-dist-upstream-full
+                cp -r ui/dist /tmp/ui-dist-upstream-full/
+              fi
+
+              # Return to our branch
+              git checkout $branch_name
+              git branch -D temp_upstream_branch
+
               # Try standard merge first with the upstream commit message
               if git merge upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG"; then
                 echo "Standard merge successful"
@@ -85,26 +101,6 @@ jobs:
                 git merge --abort
 
                 echo "Standard merge failed. Using more aggressive conflict resolution strategy."
-
-                # Backup any local files we want to preserve first (other than workflows)
-                # Add any additional directories you want to preserve here
-
-                # Special handling for ui/dist directory - get upstream version for dist files
-                if [ -d "ui/dist" ]; then
-                  echo "Backing up ui/dist directory for selective update"
-                  # Create a temporary branch to get upstream files
-                  git checkout -b temp_upstream_branch upstream/$branch_name
-
-                  # Copy upstream ui/dist files to a backup location
-                  mkdir -p /tmp/ui-dist-upstream
-                  if [ -d "ui/dist" ]; then
-                    cp -r ui/dist/* /tmp/ui-dist-upstream/ || true
-                  fi
-
-                  # Return to our branch
-                  git checkout -
-                  git branch -D temp_upstream_branch
-                fi
 
                 # Try merge with strategy to prefer upstream changes
                 git merge -X theirs upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG" || {
@@ -116,7 +112,7 @@ jobs:
                   git merge upstream/$branch_name || true
                   CONFLICT_FILES=$(git diff --name-only --diff-filter=U)
                   git merge --abort
-                  git checkout -
+                  git checkout $branch_name
                   git branch -D temp_merge_branch
 
                   echo "Files with conflicts: $CONFLICT_FILES"
@@ -129,28 +125,43 @@ jobs:
                     if [[ "$FILE" == .github/workflows/* ]]; then
                       echo "Keeping our version of $FILE"
                       git checkout --ours -- "$FILE"
+                    elif [[ "$FILE" == ui/dist/* ]]; then
+                      echo "UI dist file conflicted, will replace entire directory later"
                     else
                       echo "Taking upstream version of $FILE"
-                      git checkout --theirs -- "$FILE"
+                      git checkout --theirs -- "$FILE" || echo "Failed to checkout their version of $FILE"
                     fi
-                    git add "$FILE"
+                    git add "$FILE" || echo "Failed to add $FILE"
                   done
 
                   # Commit the merge
-                  git commit -m "$UPSTREAM_COMMIT_MSG"
+                  git commit -m "$UPSTREAM_COMMIT_MSG" || {
+                    echo "Commit failed, possibly due to unresolved conflicts. Attempting to force resolution."
+                    # Add all changes to ensure nothing is left uncommitted
+                    git add .
+                    git commit -m "$UPSTREAM_COMMIT_MSG"
+                  }
                 }
+              fi
 
-                # For ui/dist files, always use upstream version
-                if [ -d "/tmp/ui-dist-upstream" ] && [ -n "$(ls -A /tmp/ui-dist-upstream)" ]; then
-                  echo "Restoring ui/dist from upstream"
-                  mkdir -p ui/dist
-                  cp -r /tmp/ui-dist-upstream/* ui/dist/
-                  git add ui/dist/
-                  if git diff --staged --quiet; then
-                    echo "No changes to ui/dist files"
-                  else
-                    git commit -m "Update ui/dist files from upstream"
-                  fi
+              # Always replace ui/dist directory with upstream version
+              if [ -d "/tmp/ui-dist-upstream-full/dist" ]; then
+                echo "Replacing ui/dist directory with upstream version"
+                # Remove our dist directory if it exists
+                if [ -d "ui/dist" ]; then
+                  rm -rf ui/dist
+                fi
+                # Create parent directory if needed
+                mkdir -p ui
+                # Copy upstream dist directory
+                cp -r /tmp/ui-dist-upstream-full/dist ui/
+                # Add all changes
+                git add ui/dist
+                # Commit if there are changes
+                if git diff --staged --quiet; then
+                  echo "No changes to ui/dist directory"
+                else
+                  git commit -m "Update ui/dist files from upstream"
                 fi
               fi
             fi

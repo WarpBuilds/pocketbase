@@ -69,6 +69,20 @@ jobs:
               cp -r .github/workflows/* /tmp/workflow-backup/ || true
             fi
 
+            # Extract UI dist files from upstream before attempting merge
+            git checkout -b temp_upstream_branch upstream/$branch_name
+
+            # Save upstream ui/dist directory completely if it exists
+            if [ -d "ui/dist" ]; then
+              echo "Saving upstream ui/dist directory"
+              mkdir -p /tmp/ui-dist-upstream-full
+              cp -r ui/dist /tmp/ui-dist-upstream-full/
+            fi
+
+            # Return to our branch
+            git checkout $branch_name
+            git branch -D temp_upstream_branch
+
             # Get just the commit message from upstream
             UPSTREAM_COMMIT_MSG=$(git log -1 --pretty=format:"%s" upstream/$branch_name)
 
@@ -78,33 +92,20 @@ jobs:
             else
               # We're behind upstream, proceed with merge
 
-              # Extract UI dist files from upstream before attempting merge
-              # Create a temporary branch to get upstream files
-              git checkout -b temp_upstream_branch upstream/$branch_name
-
-              # Save upstream ui/dist directory completely if it exists
-              if [ -d "ui/dist" ]; then
-                echo "Saving upstream ui/dist directory"
-                mkdir -p /tmp/ui-dist-upstream-full
-                cp -r ui/dist /tmp/ui-dist-upstream-full/
-              fi
-
-              # Return to our branch
-              git checkout $branch_name
-              git branch -D temp_upstream_branch
-
-              # Try standard merge first with the upstream commit message
-              if git merge upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG"; then
-                echo "Standard merge successful"
+              # Try standard merge (without committing yet) - this stages the changes
+              if git merge --no-commit --no-ff upstream/$branch_name; then
+                echo "Standard merge successful, preparing combined commit"
               else
                 # If standard merge fails, abort it
                 git merge --abort
 
                 echo "Standard merge failed. Using more aggressive conflict resolution strategy."
 
-                # Try merge with strategy to prefer upstream changes
-                git merge -X theirs upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG" || {
-                  # If merge still fails, do a more aggressive resolution
+                # Try with theirs strategy (without committing)
+                if git merge --no-commit --no-ff -X theirs upstream/$branch_name; then
+                  echo "Theirs strategy merge successful, preparing combined commit"
+                else
+                  # If that fails too, do manual conflict resolution
                   git merge --abort
 
                   # Create a list of files with conflicts
@@ -117,8 +118,8 @@ jobs:
 
                   echo "Files with conflicts: $CONFLICT_FILES"
 
-                  # Perform the merge again, but this time we'll handle conflicts manually
-                  git merge upstream/$branch_name || true
+                  # Start a merge but don't commit
+                  git merge --no-commit --no-ff upstream/$branch_name || true
 
                   # For each conflicted file, choose upstream version except for workflows
                   for FILE in $CONFLICT_FILES; do
@@ -133,18 +134,12 @@ jobs:
                     fi
                     git add "$FILE" || echo "Failed to add $FILE"
                   done
-
-                  # Commit the merge
-                  git commit -m "$UPSTREAM_COMMIT_MSG" || {
-                    echo "Commit failed, possibly due to unresolved conflicts. Attempting to force resolution."
-                    # Add all changes to ensure nothing is left uncommitted
-                    git add .
-                    git commit -m "$UPSTREAM_COMMIT_MSG"
-                  }
-                }
+                fi
               fi
 
-              # Always replace ui/dist directory with upstream version
+              # At this point, merge changes are staged but not committed
+
+              # Replace ui/dist directory with upstream version (before commit)
               if [ -d "/tmp/ui-dist-upstream-full/dist" ]; then
                 echo "Replacing ui/dist directory with upstream version"
                 # Remove our dist directory if it exists
@@ -157,25 +152,17 @@ jobs:
                 cp -r /tmp/ui-dist-upstream-full/dist ui/
                 # Add all changes
                 git add ui/dist
-                # Commit if there are changes
-                if git diff --staged --quiet; then
-                  echo "No changes to ui/dist directory"
-                else
-                  git commit -m "Update ui/dist files from upstream"
-                fi
               fi
-            fi
 
-            # Restore our workflow files regardless of merge strategy
-            if [ -d "/tmp/workflow-backup" ] && [ -n "$(ls -A /tmp/workflow-backup)" ]; then
-              mkdir -p .github/workflows
-              cp -r /tmp/workflow-backup/* .github/workflows/
-              git add .github/workflows/
-              if git diff --staged --quiet; then
-                echo "No changes to workflow files"
-              else
-                git commit -m "Preserve custom workflow files after sync"
+              # Restore our workflow files (before commit)
+              if [ -d "/tmp/workflow-backup" ] && [ -n "$(ls -A /tmp/workflow-backup)" ]; then
+                mkdir -p .github/workflows
+                cp -r /tmp/workflow-backup/* .github/workflows/
+                git add .github/workflows/
               fi
+
+              # Now commit everything with the upstream commit message
+              git commit -m "$UPSTREAM_COMMIT_MSG"
             fi
 
             # Push changes to origin

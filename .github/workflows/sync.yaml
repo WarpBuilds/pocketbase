@@ -84,9 +84,74 @@ jobs:
                 # If standard merge fails, abort it
                 git merge --abort
 
-                # Try again with strategy to prefer upstream changes
-                echo "Standard merge failed. Using 'theirs' strategy to resolve conflicts automatically."
-                git merge -X theirs upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG"
+                echo "Standard merge failed. Using more aggressive conflict resolution strategy."
+
+                # Backup any local files we want to preserve first (other than workflows)
+                # Add any additional directories you want to preserve here
+
+                # Special handling for ui/dist directory - get upstream version for dist files
+                if [ -d "ui/dist" ]; then
+                  echo "Backing up ui/dist directory for selective update"
+                  # Create a temporary branch to get upstream files
+                  git checkout -b temp_upstream_branch upstream/$branch_name
+
+                  # Copy upstream ui/dist files to a backup location
+                  mkdir -p /tmp/ui-dist-upstream
+                  if [ -d "ui/dist" ]; then
+                    cp -r ui/dist/* /tmp/ui-dist-upstream/ || true
+                  fi
+
+                  # Return to our branch
+                  git checkout -
+                  git branch -D temp_upstream_branch
+                fi
+
+                # Try merge with strategy to prefer upstream changes
+                git merge -X theirs upstream/$branch_name -m "$UPSTREAM_COMMIT_MSG" || {
+                  # If merge still fails, do a more aggressive resolution
+                  git merge --abort
+
+                  # Create a list of files with conflicts
+                  git checkout -b temp_merge_branch
+                  git merge upstream/$branch_name || true
+                  CONFLICT_FILES=$(git diff --name-only --diff-filter=U)
+                  git merge --abort
+                  git checkout -
+                  git branch -D temp_merge_branch
+
+                  echo "Files with conflicts: $CONFLICT_FILES"
+
+                  # Perform the merge again, but this time we'll handle conflicts manually
+                  git merge upstream/$branch_name || true
+
+                  # For each conflicted file, choose upstream version except for workflows
+                  for FILE in $CONFLICT_FILES; do
+                    if [[ "$FILE" == .github/workflows/* ]]; then
+                      echo "Keeping our version of $FILE"
+                      git checkout --ours -- "$FILE"
+                    else
+                      echo "Taking upstream version of $FILE"
+                      git checkout --theirs -- "$FILE"
+                    fi
+                    git add "$FILE"
+                  done
+
+                  # Commit the merge
+                  git commit -m "$UPSTREAM_COMMIT_MSG"
+                }
+
+                # For ui/dist files, always use upstream version
+                if [ -d "/tmp/ui-dist-upstream" ] && [ -n "$(ls -A /tmp/ui-dist-upstream)" ]; then
+                  echo "Restoring ui/dist from upstream"
+                  mkdir -p ui/dist
+                  cp -r /tmp/ui-dist-upstream/* ui/dist/
+                  git add ui/dist/
+                  if git diff --staged --quiet; then
+                    echo "No changes to ui/dist files"
+                  else
+                    git commit -m "Update ui/dist files from upstream"
+                  fi
+                fi
               fi
             fi
 

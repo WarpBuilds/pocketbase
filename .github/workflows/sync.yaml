@@ -161,8 +161,13 @@ jobs:
                 git add .github/workflows/
               fi
 
-              # Now commit everything with the upstream commit message
-              git commit -m "$UPSTREAM_COMMIT_MSG"
+              # Check if there are any changes to commit before attempting to commit
+              if git diff --staged --quiet; then
+                echo "No changes to commit after merge and customizations"
+              else
+                # Now commit everything with the upstream commit message
+                git commit -m "$UPSTREAM_COMMIT_MSG"
+              fi
             fi
 
             # Push changes to origin

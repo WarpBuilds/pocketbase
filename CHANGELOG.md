@@ -1,3 +1,10 @@
+## v0.28.0 (WIP)
+
+- Write the default response body of `*Request` hooks that are wrapped in a transaction after the related transaction completes to allow propagating errors ([#6462](https://github.com/pocketbase/pocketbase/discussions/6462#discussioncomment-12207818)).
+
+- Updated the default `COUNT` list request query to use `rowid` when possible to minimize the need of having the `id` field in a covering index.
+
+
 ## v0.27.1
 
 - Updated example `geoPoint` API preview body data.

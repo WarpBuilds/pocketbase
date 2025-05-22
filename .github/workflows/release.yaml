@@ -7,7 +7,7 @@ on:
 jobs:
   github-runner-build:
     name: Build on GitHub Runner
-    runs-on: gha-ubuntu-latest-x64-4x
+    runs-on: ubuntu-latest
     env:
       flags: ""
       runner_type: "github"

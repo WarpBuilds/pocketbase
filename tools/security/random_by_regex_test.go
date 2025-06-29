@@ -29,7 +29,7 @@ func TestRandomStringByRegex(t *testing.T) {
 		{`[a-zA-Z]*`, nil, false},
 		{`[^a-zA-Z]{5,30}`, nil, false},
 		{`\w+_abc`, nil, false},
-		{`[a-zA-Z_]*`, nil, false},
+		{`(1|2|3)[a-zA-Z_]*`, nil, false},
 		{`[2-9]{5}-\w+`, nil, false},
 		{`(a|b|c)`, nil, false},
 	}

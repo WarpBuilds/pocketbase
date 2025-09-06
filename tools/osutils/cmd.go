@@ -67,13 +67,12 @@ func YesNoPrompt(message string, fallback bool) bool {
 // IsProbablyGoRun loosely checks if the current executable is running
 // as a result of "go run".
 func IsProbablyGoRun() bool {
-	if strings.HasPrefix(os.Args[0], os.TempDir()) {
-		return true
-	}
+	runDirs := []string{os.TempDir(), os.Getenv("GOCACHE")}
 
-	buildCacheDir := os.Getenv("GOCACHE")
-	if buildCacheDir != "" && strings.HasPrefix(os.Args[0], buildCacheDir) {
-		return true
+	for _, dir := range runDirs {
+		if dir != "" && strings.HasPrefix(os.Args[0], dir) {
+			return true
+		}
 	}
 
 	return false

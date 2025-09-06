@@ -71,8 +71,8 @@ func IsProbablyGoRun() bool {
 		return true
 	}
 
-	goCacheEnv := os.Getenv("GOCACHE")
-	if goCacheEnv != "" && strings.HasPrefix(os.Args[0], goCacheEnv) {
+	buildCacheDir := os.Getenv("GOCACHE")
+	if buildCacheDir != "" && strings.HasPrefix(os.Args[0], buildCacheDir) {
 		return true
 	}
 

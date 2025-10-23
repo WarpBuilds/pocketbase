@@ -973,7 +973,8 @@ a.thumb:not(.thumb-active) {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 5px;;
+        row-gap: 2px;
+        column-gap: 5px;
         width: auto;
         min-width: 0;
         text-align: left;

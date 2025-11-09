@@ -31,7 +31,11 @@ var (
 	_ RecordInterceptor = (*TextField)(nil)
 )
 
-var forbiddenPKCharacters = []string{".", "/", `\`, "|", `"`, "'", "`", "<", ">", ":", "?", "*", "%", "$"}
+var forbiddenPKCharacters = []string{
+	".", "/", `\`, "|", `"`, "'", "`",
+	"<", ">", ":", "?", "*", "%", "$",
+	"\000", "\t", "\n", "\r", " ",
+}
 
 // (see largestReservedPKLength)
 var caseInsensitiveReservedPKs = []string{
@@ -227,7 +231,7 @@ func (f *TextField) ValidatePlainValue(value string) error {
 	length := len([]rune(value))
 
 	if f.Min > 0 && length < f.Min {
-		return validation.NewError("validation_min_text_constraint", "Must be at least {{.min}} character(s)").
+		return validation.NewError("validation_min_text_constraint", "Must be at least {{.min}} character(s).").
 			SetParams(map[string]any{"min": f.Min})
 	}
 
@@ -237,14 +241,34 @@ func (f *TextField) ValidatePlainValue(value string) error {
 	}
 
 	if max > 0 && length > max {
-		return validation.NewError("validation_max_text_constraint", "Must be no more than {{.max}} character(s)").
+		return validation.NewError("validation_max_text_constraint", "Must be no more than {{.max}} character(s).").
 			SetParams(map[string]any{"max": max})
 	}
 
 	if f.Pattern != "" {
 		match, _ := regexp.MatchString(f.Pattern, value)
 		if !match {
-			return validation.NewError("validation_invalid_format", "Invalid value format")
+			return validation.NewError("validation_invalid_format", "Invalid value format.")
+		}
+	}
+
+	// additional primary key checks to minimize eventual filesystem compatibility issues
+	// because the primary key is often used as a file/directory name
+	if f.PrimaryKey && f.Pattern != defaultLowercaseRecordIdPattern {
+		for _, ch := range forbiddenPKCharacters {
+			if strings.Contains(value, ch) {
+				return validation.NewError("validation_forbidden_pk_character", "'{{.ch}}' is not a valid primary key character.").
+					SetParams(map[string]any{"ch": ch})
+			}
+		}
+
+		if largestReservedPKLength >= length {
+			for _, reserved := range caseInsensitiveReservedPKs {
+				if strings.EqualFold(value, reserved) {
+					return validation.NewError("validation_reserved_pk", "The primary key '{{.reserved}}' is reserved and cannot be used.").
+						SetParams(map[string]any{"reserved": reserved})
+				}
+			}
 		}
 	}
 

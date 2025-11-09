@@ -31,6 +31,18 @@ var (
 	_ RecordInterceptor = (*TextField)(nil)
 )
 
+var forbiddenPKCharacters = []string{".", "/", `\`, "|", `"`, "'", "`", "<", ">", ":", "?", "*", "%", "$"}
+
+// (see largestReservedPKLength)
+var caseInsensitiveReservedPKs = []string{
+	// reserved Windows files names
+	"CON", "PRN", "AUX", "NUL",
+	"COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+	"LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+}
+
+const largestReservedPKLength = 4
+
 // TextField defines "text" type field for storing any string value.
 //
 // The respective zero record field value is empty string.
@@ -155,8 +167,6 @@ func (f *TextField) PrepareValue(record *Record, raw any) (any, error) {
 	return cast.ToString(raw), nil
 }
 
-var forbiddenPKChars = []string{"/", "\\"}
-
 // ValidateValue implements [Field.ValidateValue] interface method.
 func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) error {
 	newVal, ok := record.GetRaw(f.Name).(string)
@@ -178,15 +188,6 @@ func (f *TextField) ValidateValue(ctx context.Context, app App, record *Record) 
 				return nil
 			}
 		} else {
-			// disallow PK special characters no matter of the Pattern validator to minimize
-			// side-effects when the primary key is used for example in a directory path
-			for _, c := range forbiddenPKChars {
-				if strings.Contains(newVal, c) {
-					return validation.NewError("validation_pk_forbidden", "The record primary key contains forbidden characters.").
-						SetParams(map[string]any{"forbidden": c})
-				}
-			}
-
 			// this technically shouldn't be necessarily but again to
 			// minimize misuse of the Pattern validator that could cause
 			// side-effects on some platforms check for duplicates in a case-insensitive manner
@@ -244,6 +245,26 @@ func (f *TextField) ValidatePlainValue(value string) error {
 		match, _ := regexp.MatchString(f.Pattern, value)
 		if !match {
 			return validation.NewError("validation_invalid_format", "Invalid value format")
+		}
+	}
+
+	// additional primary key checks to minimize eventual filesystem compatibility issues
+	// because the primary key is often used as a file/directory name
+	if f.PrimaryKey && f.Pattern != defaultLowercaseRecordIdPattern {
+		for _, ch := range forbiddenPKCharacters {
+			if strings.Contains(value, ch) {
+				return validation.NewError("validation_forbidden_pk_character", "'{{.ch}}' is not a valid primary key character").
+					SetParams(map[string]any{"ch": ch})
+			}
+		}
+
+		if largestReservedPKLength >= length {
+			for _, reserved := range caseInsensitiveReservedPKs {
+				if strings.EqualFold(value, reserved) {
+					return validation.NewError("validation_reserved_pk", "The primary key '{{.reserved}}' is reserved and cannot be used").
+						SetParams(map[string]any{"reserved": reserved})
+				}
+			}
 		}
 	}
 

@@ -215,8 +215,10 @@ func TestFileNameNormalizations(t *testing.T) {
 		{"a.b.c.?.?.?.2", `^a_b_c_\w{10}\.2$`},
 		{"a.b.c.d.tar.gz", `^a_b_c_d_\w{10}\.tar\.gz$`},
 		{"abcd", `^abcd_\w{10}\.txt$`},
-		{"a  b! c d  . 456", `^a_b_c_d_\w{10}\.456$`},                                        // normalize spaces
-		{strings.Repeat("a", 101) + "." + strings.Repeat("b", 21), `^a{100}_\w{10}\.b{20}$`}, // name and extension length trim
+		{".abcd.123.", `^abcd_\w{10}\.123$`},
+		{"a  b! c d  . 456", `^a_b_c_d_\w{10}\.456$`},                                              // normalize spaces
+		{strings.Repeat("a", 101) + "." + strings.Repeat("b", 21), `^a{100}_\w{10}\.b{20}$`},       // name and extension length cut
+		{"abc" + strings.Repeat("d", 290) + "." + strings.Repeat("b", 9), `^d{100}_\w{10}\.b{9}$`}, // initial total lenght cut
 	}
 
 	for i, s := range scenarios {
@@ -225,7 +227,8 @@ func TestFileNameNormalizations(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if match, err := regexp.Match(s.pattern, []byte(f.Name)); !match {
+			match, err := regexp.Match(s.pattern, []byte(f.Name))
+			if !match {
 				t.Fatalf("Expected Name to match %v, got %q (%v)", s.pattern, f.Name, err)
 			}
 		})

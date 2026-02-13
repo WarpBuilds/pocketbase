@@ -6,14 +6,14 @@ require (
 	github.com/disintegration/imaging v1.6.2
 	github.com/domodwyer/mailyak/v3 v3.6.2
 	github.com/dop251/goja v0.0.0-20260106131823-651366fbe6e3
-	github.com/dop251/goja_nodejs v0.0.0-20251015164255-5e94316bedaf
+	github.com/dop251/goja_nodejs v0.0.0-20260212111938-1f56ff5bcf14
 	github.com/fatih/color v1.18.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gabriel-vasile/mimetype v1.4.13
 	github.com/ganigeorgiev/fexpr v0.5.0
 	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
 	github.com/golang-jwt/jwt/v5 v5.3.1
-	github.com/pocketbase/dbx v1.11.0
+	github.com/pocketbase/dbx v1.12.0
 	github.com/pocketbase/tygoja v0.0.0-20250812183945-97ffe055281f
 	github.com/spf13/cast v1.10.0
 	github.com/spf13/cobra v1.10.2
@@ -22,7 +22,7 @@ require (
 	golang.org/x/net v0.49.0
 	golang.org/x/oauth2 v0.34.0
 	golang.org/x/sync v0.19.0
-	modernc.org/sqlite v1.44.3
+	modernc.org/sqlite v1.45.0
 )
 
 require (

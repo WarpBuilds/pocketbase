@@ -4,7 +4,9 @@
 
 - Documented the `unmarshal` JSVM helper ([#7543](https://github.com/pocketbase/pocketbase/issues/7543)).
 
-- Check again for data existence after the `Store.GetOrSet` write lock to ensure that the read value would be prioritized.
+- Added extra existence check after the `Store.GetOrSet` write lock to prevent races overwriting an already existing value.
+
+- (@todo) Bumped min Go GitHub action version to 1.26.1 because it comes with some [security fixes](https://github.com/golang/go/issues?q=milestone%3AGo1.26.1).
 
 
 ## v0.36.5

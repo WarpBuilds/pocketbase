@@ -25,7 +25,7 @@ func FireAndForget(f func(), wg ...*sync.WaitGroup) {
 				log.Println("RECOVERED FROM PANIC (safe to ignore):", err)
 
 				stack := make([]byte, 2<<10) // 2 KB
-				length := runtime.Stack(stack, true)
+				length := runtime.Stack(stack, false)
 				log.Println(string(stack[:length]))
 			}
 		}()

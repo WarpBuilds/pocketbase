@@ -18,6 +18,7 @@ import (
 	"github.com/pocketbase/pocketbase/tools/auth"
 	"github.com/pocketbase/pocketbase/tools/dbutils"
 	"github.com/pocketbase/pocketbase/tools/filesystem"
+	"github.com/pocketbase/pocketbase/tools/inflector"
 	"golang.org/x/oauth2"
 )
 
@@ -213,16 +214,20 @@ func (form *recordOAuth2LoginForm) checkProviderName(value any) error {
 	return nil
 }
 
+// @todo evaluate if it is still worth keeping as this exists only for backward-compatibility with pre v0.23 verions
 func oldCanAssignUsername(txApp core.App, collection *core.Collection, username string) bool {
 	// ensure that username is unique
 	index, hasUniqueue := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, collection.OAuth2.MappedFields.Username)
 	if hasUniqueue {
+		// it is not required because collection fields are already sanitized but normalize as an extra precaution
+		colName := inflector.Columnify(index.Columns[0].Name)
+
 		var expr dbx.Expression
 		if strings.EqualFold(index.Columns[0].Collate, "nocase") {
 			// case-insensitive search
-			expr = dbx.NewExp("username = {:username} COLLATE NOCASE", dbx.Params{"username": username})
+			expr = dbx.NewExp("[["+colName+"]] = {:username} COLLATE NOCASE", dbx.Params{"username": username})
 		} else {
-			expr = dbx.HashExp{"username": username}
+			expr = dbx.HashExp{colName: username}
 		}
 
 		var exists int

@@ -214,13 +214,24 @@ func (form *recordOAuth2LoginForm) checkProviderName(value any) error {
 	return nil
 }
 
-// @todo evaluate if it is still worth keeping as this exists only for backward-compatibility with pre v0.23 verions
+// @todo evaluate if it is still worth keeping as this exists only for backward-compatibility with pre v0.23 versions
 func oldCanAssignUsername(txApp core.App, collection *core.Collection, username string) bool {
+	field := collection.Fields.GetByName(collection.OAuth2.MappedFields.Username)
+	if field == nil {
+		return false
+	}
+
+	// ensure that the value matches the pattern of the username field (if text)
+	if txtField, ok := field.(*core.TextField); ok && txtField.ValidatePlainValue(username) != nil {
+		return false
+	}
+
 	// ensure that username is unique
-	index, hasUniqueue := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, collection.OAuth2.MappedFields.Username)
+	index, hasUniqueue := dbutils.FindSingleColumnUniqueIndex(collection.Indexes, field.GetName())
 	if hasUniqueue {
-		// it is not required because collection fields are already sanitized but normalize as an extra precaution
-		colName := inflector.Columnify(index.Columns[0].Name)
+		// it is not required because collection fields are already sanitized
+		// but normalize as an extra precaution in case of a custom validator
+		colName := inflector.Columnify(field.GetName())
 
 		var expr dbx.Expression
 		if strings.EqualFold(index.Columns[0].Collate, "nocase") {
@@ -237,10 +248,7 @@ func oldCanAssignUsername(txApp core.App, collection *core.Collection, username 
 		}
 	}
 
-	// ensure that the value matches the pattern of the username field (if text)
-	txtField, _ := collection.Fields.GetByName(collection.OAuth2.MappedFields.Username).(*core.TextField)
-
-	return txtField != nil && txtField.ValidatePlainValue(username) == nil
+	return true
 }
 
 func oauth2Submit(e *core.RecordAuthWithOAuth2RequestEvent, optExternalAuth *core.ExternalAuth) error {

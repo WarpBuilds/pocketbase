@@ -68,7 +68,7 @@
     --surfaceSuccessColor: color-mix(in srgb, var(--successColor), white 80%);
     --surfaceWarningColor: color-mix(in srgb, var(--warningColor), white 80%);
     --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), white 80%);
-    --selectionColor: var(--surfaceAlt3Color);
+    --selectionColor: rgba(34, 36, 42, 0.22);
     --inputColor: var(--surfaceAlt2Color);
     --inputFocusColor: var(--surfaceAlt3Color);
     --inputBorderColor: var(--surfaceAlt4Color);
@@ -138,28 +138,27 @@
 /* dark */
 [data-color-scheme="dark"],
 [data-color-scheme="dark"] .dropdown {
-    --surfaceColor: #282828;
-    --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 2%);
-    --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 4%);
-    --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 6%);
-    --surfaceAlt4Color: color-mix(in srgb, var(--surfaceColor), white 9%);
-    --surfaceAlt5Color: color-mix(in srgb, var(--surfaceColor), white 12%);
+    --surfaceColor: #1f1f1f;
+    --surfaceAlt1Color: color-mix(in srgb, var(--surfaceColor), white 3%);
+    --surfaceAlt2Color: color-mix(in srgb, var(--surfaceColor), white 7%);
+    --surfaceAlt3Color: color-mix(in srgb, var(--surfaceColor), white 12%);
+    --surfaceAlt4Color: color-mix(in srgb, var(--surfaceColor), white 14%);
+    --surfaceAlt5Color: color-mix(in srgb, var(--surfaceColor), white 16%);
 
     --surfaceTxtColor: #dedede;
     --tooltipTxtColor: var(--surfaceTxtColor);
     --surfaceTxtHintColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 45%);
     --surfaceTxtDisabledColor: color-mix(in srgb, var(--surfaceTxtColor), transparent 65%);
 
-    --secondaryColor: var(--surfaceAlt3Color);
+    --secondaryColor: var(--surfaceAlt2Color);
     --secondaryTxtColor: var(--surfaceTxtColor);
-    --secondaryTxtColor: var(--surfaceTxtColor);
-    --secondaryAlt1Color: var(--surfaceAlt4Color);
-    --secondaryAlt2Color: var(--surfaceAlt5Color);
+    --secondaryAlt1Color: var(--surfaceAlt3Color);
+    --secondaryAlt2Color: var(--surfaceAlt4Color);
 
-    --primaryColor: #1e1e1e;
+    --primaryColor: #161616;
     --primaryTxtColor: var(--surfaceTxtColor);
-    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), black 8%);
-    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), black 16%);
+    --primaryAlt1Color: color-mix(in srgb, var(--primaryColor), white 1%);
+    --primaryAlt2Color: color-mix(in srgb, var(--primaryColor), white 1.5%);
     --primaryTxtHintColor: color-mix(in srgb, var(--primaryTxtColor), transparent 35%);
     --primaryTxtDisabledColor: color-mix(in srgb, var(--primaryTxtColor), transparent 50%);
 
@@ -169,30 +168,31 @@
     --infoAlt2Color: color-mix(in srgb, var(--infoColor), black 15%);
     --surfaceInfoColor: color-mix(in srgb, var(--infoColor), var(--surfaceColor) 45%);
 
-    --successColor: #257e58;
+    --successColor: #27865d;
     --successTxtColor: var(--surfaceTxtColor);
     --successAlt1Color: color-mix(in srgb, var(--successColor), black 10%);
     --successAlt2Color: color-mix(in srgb, var(--successColor), black 15%);
     --surfaceSuccessColor: color-mix(in srgb, var(--successColor), var(--surfaceColor) 45%);
 
-    --warningColor: #ae4d0e;
+    --warningColor: #cf4e17;
     --warningTxtColor: var(--surfaceTxtColor);
     --warningAlt1Color: color-mix(in srgb, var(--warningColor), black 10%);
     --warningAlt2Color: color-mix(in srgb, var(--warningColor), black 15%);
     --surfaceWarningColor: color-mix(in srgb, var(--warningColor), var(--surfaceColor) 45%);
 
-    --dangerColor: #b6354c;
+    --dangerColor: #bb303e;
     --dangerTxtColor: var(--surfaceTxtColor);
     --dangerAlt1Color: color-mix(in srgb, var(--dangerColor), black 10%);
     --dangerAlt2Color: color-mix(in srgb, var(--dangerColor), black 15%);
     --surfaceDangerColor: color-mix(in srgb, var(--dangerColor), var(--surfaceColor) 45%);
 
+    --selectionColor: rgba(255,255,255, 0.22);
     --inputColor: var(--surfaceAlt2Color);
     --inputFocusColor: var(--surfaceAlt3Color);
     --inputBorderColor: var(--surfaceAlt4Color);
     scrollbar-color: var(--surfaceAlt5Color) transparent;
 
-    --modalOverlayColor: rgb(0,0,0,0.5);
+    --modalOverlayColor: rgb(0,0,0, 0.45);
 
     --boxShadow: 0px 8px 5px -5px rgba(0,0,0, 0.3);
     --leftBoxShadow: -1px 0px 5px 0 rgba(0,0,0, 0.3);

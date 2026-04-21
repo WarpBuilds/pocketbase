@@ -184,7 +184,10 @@ export function pageCollections(route) {
                 }
             },
             onunmount: () => {
-                app.pb.cancelRequest(TOTAL_COUNT_REQUEST_KEY);
+                // don't cancel manually and leave to the auto abort handling
+                // since onunmount is delayed and can incorrectly cancel
+                // the total count query on page back/forward navigation
+                // app.pb.cancelRequest(TOTAL_COUNT_REQUEST_KEY);
 
                 watchers.forEach((w) => w?.unwatch());
 
